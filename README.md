@@ -7,12 +7,12 @@ The members of the team are:
 - Adna Ali
 - Faysal Abdallah
 - Xiangyu Song
-- *enter full name 3 here*
+- Adam Ansari
 
 
 ## Deployment
 
-The system has been deployed at [https://github.com/teajammin/team-allocation-project.git](*url*)
+The system has been deployed at [https://seals.pythonanywhere.com](https://seals.pythonanywhere.com)
 
 
 ## Getting started
