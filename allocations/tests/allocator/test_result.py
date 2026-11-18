@@ -1,9 +1,10 @@
-from django.test import TestCase
+from django.test import SimpleTestCase
 
 from allocations.allocator.result import AllocationResult, Status
 from allocations.allocator.team import Team
 
-class AllocationResultTestCase(TestCase):
+
+class AllocationResultTestCase(SimpleTestCase):
 
     def test_success_keeps_its_teams(self):
         teams = [Team("Team 1", ["amy", "ben", "cara", "dan"])]
@@ -13,9 +14,9 @@ class AllocationResultTestCase(TestCase):
 
     def test_success_without_teams_is_rejected(self):
         with self.assertRaises(ValueError):
-            AllocationResult(Status.SUCCESS, None, "No Teams.")
+            AllocationResult(Status.SUCCESS, None, "No teams.")
 
     def test_failure_with_teams_is_rejected(self):
         teams = [Team("Team 1", ["amy", "ben", "cara", "dan"])]
         with self.assertRaises(ValueError):
-            AllocationResult(Status.INFEASIBLE, teams, "Impossible. ")
+            AllocationResult(Status.INFEASIBLE, teams, "Impossible.")

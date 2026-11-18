@@ -1,8 +1,9 @@
-from django.test import TestCase
+from django.test import SimpleTestCase
 
 from allocations.allocator.team import Team
 
-class TeamTestCase(TestCase):
+
+class TeamTestCase(SimpleTestCase):
 
     def test_team_remembers_its_name(self):
         team = Team("Team 1", [])

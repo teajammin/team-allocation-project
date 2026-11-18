@@ -2,11 +2,12 @@
 
 from allocations.allocator.team import Team
 
+
 def initial_allocation(students, sizes):
-    """Returns teams of the given sizes, filled in order of c-score.
+    """Return teams of the given sizes, filled in order of c-score.
     
     Students without c-score are placed after everyone else.
-    Raises Value error if the sizes do not add up to the number of students.
+    Raises ValueError if the sizes do not add up to the number of students.
     """
 
     if sum(sizes) != len(students):
@@ -24,5 +25,3 @@ def _sort_by_c_score(students):
     scored = [student for student in students if student.c_score is not None]
     unscored = [student for student in students if student.c_score is None]
     return sorted(scored, key=lambda student: student.c_score) + unscored
-
-

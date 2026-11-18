@@ -2,19 +2,21 @@
 
 from enum import Enum
 
+
 class Status(Enum):
     """The three possible outcomes of an allocation run.
     
     TIMED_OUT means no valid allocation was found in time,
-    not that none exists
+    not that none exists.
     """
 
     SUCCESS = "success"
     INFEASIBLE = "infeasible"
     TIMED_OUT = "timed_out"
 
+
 class AllocationResult:
-    """What allocate() hands back: the outcome, the teams and a message"""
+    """What allocate() hands back: the outcome, the teams and a message."""
 
     def __init__(self, status, teams, message):
         if status == Status.SUCCESS and teams is None:

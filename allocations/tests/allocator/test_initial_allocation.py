@@ -1,16 +1,12 @@
-from types import SimpleNamespace
-
-from django.test import TestCase
+from django.test import SimpleTestCase
 
 from allocations.allocator.initial_allocation import initial_allocation
 from allocations.allocator.team_sizes import team_sizes
+from allocations.tests.allocator.helpers import make_students
 
-def make_students(scores):
-    """Return stand-in students with given c-scores."""
-    return [SimpleNamespace(c_score=score) for score in scores]
 
 # Tests of initial allocation
-class InitialAllocationTestCase(TestCase):
+class InitialAllocationTestCase(SimpleTestCase):
 
     def test_every_student_appears_exactly_once_in_teams_of_the_right_size(self):
         for num_students in range(51):
