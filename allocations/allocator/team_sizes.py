@@ -1,4 +1,5 @@
 """Work out how many students go in each team."""
+
 def team_sizes(num_students, min_size, max_size):
     """Return a list of team sizes using the fewest teams possible.
     
