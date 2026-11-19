@@ -19,4 +19,8 @@ def allocate(students, min_size, max_size):
             f"{min_size}-{max_size}. Change the team size limits."
         )
     teams = initial_allocation(students, sizes)
-    return AllocationResult(Status.SUCCESS, teams, f"{num_students} students allocated into {len(teams)} teams.")
+    return AllocationResult(
+        Status.SUCCESS, 
+        teams, 
+        f"{num_students},students allocated into {len(teams)} teams."
+    )

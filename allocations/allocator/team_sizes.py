@@ -14,7 +14,7 @@ def team_sizes(num_students, min_size, max_size):
 
     teams = 1
     while teams * min_size <= num_students:  # Keep going while this many teams could still fit
-        if num_students <= teams * max_size:  # Check whether all students fit if every team is at its biggest
+        if num_students <= teams * max_size:  # Can all students fit if every team is at its biggest
             base = num_students // teams
             extra = num_students % teams
             return [base + 1] * extra + [base] * (teams - extra) 
