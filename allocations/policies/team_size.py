@@ -15,11 +15,11 @@ class TeamSizePolicy(Policy):
             size = len(team.students)
             if size < self.min_size or size > self.max_size:
                 violations.append(Violation(
-                                    policy_name=self.name, 
-                                    team_name=team.name, 
+                                    policy_name=self.name,
+                                    team_name=team.name,
                                     message=(
                                         f"{team.name} has {size} students "
-                                        f"(allowed {self.min_size}-{self.max_size})"), 
+                                        f"(allowed {self.min_size}-{self.max_size})"),
                                     is_hard=self.is_hard
                                    ))
         return violations
