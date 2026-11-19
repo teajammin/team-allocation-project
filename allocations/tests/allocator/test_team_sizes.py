@@ -28,3 +28,16 @@ class TeamSizesTestCase(SimpleTestCase):
                 if sizes is not None:
                     self.assertEqual(sum(sizes), num_students)
                     self.assertTrue(all(4 <= size <= 5 for size in sizes))
+
+    def test_boundary_cohorts_for_four_to_five(self):
+        expected = {7: None, 8: [4, 4], 9: [5, 4], 10: [5, 5], 11: None}
+        for num_students, sizes in expected.items():
+            with self.subTest(num_students=num_students):
+                self.assertEqual(team_sizes(num_students, 4, 5), sizes)
+
+    def test_equal_limits_need_an_exact_multiple(self):
+        self.assertEqual(team_sizes(9, 3, 3), [3, 3, 3])
+        self.assertIsNone(team_sizes(10, 3, 3))
+
+    def test_fewer_students_than_minimum_is_impossible(self):
+        self.assertIsNone(team_sizes(3, 4, 5))

@@ -5,7 +5,7 @@ from enum import Enum
 
 class Status(Enum):
     """The three possible outcomes of an allocation run.
-    
+
     TIMED_OUT means no valid allocation was found in time,
     not that none exists.
     """
@@ -26,4 +26,3 @@ class AllocationResult:
         self.status = status
         self.teams = teams
         self.message = message
-
