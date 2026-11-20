@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Allocation run for {{ project.name }}</h1>
+  <p><strong>Status:</strong> {{ allocation_run.status }}</p>
+  <p>{{ allocation_run.message }}</p>
+  <p>Team size limits: {{ allocation_run.min_team_size }}-{{ allocation_run.max_team_size }}</p>
+
+  {% if allocation_run.policies.check_gender or allocation_run.policies.check_attainment %}
+    <div class="alert alert-info">
+      The configured policy checks below were evaluated after the teams were formed; they were not optimization constraints for the allocator.
+    </div>
+  {% endif %}
+
+  {% if allocation_run.status == 'success' %}
+    <a class="btn btn-primary mb-3" href="{% url 'allocation_export' project.id allocation_run.id %}">Download allocation CSV</a>
+    {% if allocation_run.violations %}
+      <h2>Policy findings</h2>
+      <ul class="list-group mb-4">
+        {% for violation in allocation_run.violations %}
+          <li class="list-group-item"><strong>{{ violation.policy_name }}</strong>: {{ violation.message }}</li>
+        {% endfor %}
+      </ul>
+    {% elif allocation_run.policies.check_gender or allocation_run.policies.check_attainment %}
+      <p>No findings from the selected post-allocation checks.</p>
+    {% endif %}
+    <h2>Teams</h2>
+    {% for team in allocation_run.teams %}
+      <section class="mb-4">
+        <h3>{{ team.name }} <small class="text-body-secondary">({{ team.students|length }} students)</small></h3>
+        <div class="table-responsive">
+          <table class="table table-sm table-striped">
+            <thead><tr><th>First name</th><th>Last name</th><th>Email</th></tr></thead>
+            <tbody>
+              {% for student in team.students %}
+                <tr><td>{{ student.first_name }}</td><td>{{ student.last_name }}</td><td>{{ student.email }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% empty %}
+      <p>The cohort was empty, so no teams were needed.</p>
+    {% endfor %}
+  {% endif %}
+
+  <a href="{% url 'project_detail' project.id %}">Back to project</a>
+{% endblock %}
