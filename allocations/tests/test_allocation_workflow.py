@@ -48,6 +48,31 @@ class AllocationWorkflowTests(TestCase):
         self.assertEqual(student.c_score, 0)
         self.assertEqual(student.extra, {'course': 'Computing'})
 
+    def test_project_import_accepts_assignment_labeled_categories(self):
+        sample_rows = (
+            b'first_name,last_name,email,gender,ethnicity,c-score\n'
+            b'Rahul,Khan,rahul@example.org,2: Man,"1: Asian, or Asian British",57\n'
+            b'Rami,Fahmy,rami@example.org,2: Man,5 : Other ethnic group (e.g. Arab),63\n'
+            b'Victoria,Thomas,victoria@example.org,1: Woman,4: White,66\n'
+            b'Zoya,Banerjee,zoya@example.org,1: Woman,"3 : Mixed, or multiple ethic groups",46\n'
+        )
+
+        response = self.client.post(reverse('project_create'), {
+            'name': 'Sample format project',
+            'cohort_file': self.upload(sample_rows),
+        })
+
+        project = Project.objects.get(name='Sample format project')
+        self.assertRedirects(response, reverse('project_detail', args=[project.id]))
+        self.assertEqual(
+            list(project.students.order_by('email').values_list('gender', flat=True)),
+            ['2', '2', '1', '1'],
+        )
+        self.assertEqual(
+            list(project.students.order_by('email').values_list('ethnicity', flat=True)),
+            ['1', '5', '4', '3'],
+        )
+
     def test_invalid_cohort_is_not_imported(self):
         invalid_csv = (
             b'first_name,last_name,email,gender,ethnicity,c-score\n'

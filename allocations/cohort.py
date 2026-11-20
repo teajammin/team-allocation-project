@@ -2,6 +2,7 @@
 
 import csv
 import io
+import re
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -95,6 +96,9 @@ def parse_cohort_csv(upload):
 
 def _category(row, field, allowed_values, line_number, errors):
     value = row.get(field, '')
+    match = re.fullmatch(r'([0-9]+)(?:\s*:.*)?', value)
+    if match:
+        value = match.group(1)
     if not value or value == '0':
         return None
     if value not in allowed_values:
