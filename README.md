@@ -31,6 +31,28 @@ Then open <http://127.0.0.1:8000/> and log in as `janedoe` (a superuser) or
 
 Run `python manage.py unseed` to delete all users again.
 
+## Projects and allocations
+
+After logging in, open **Projects** from the dashboard to create a project and
+upload its cohort. Cohort files must be UTF-8 CSVs no larger than 5 MB and must
+contain `first_name`, `last_name` and `email` columns. The optional columns
+`gender`, `ethnicity` and `c-score` are validated against the categories and
+score range in the assignment; additional columns are retained as student
+attributes. Email addresses must be unique within a cohort (case-insensitive).
+Uploads are rejected in full if any row is invalid; replacing a cohort leaves
+existing allocation-run snapshots intact.
+
+Allocation runs use the configured minimum and maximum team sizes and call
+`allocate(students, policies)` as implemented. The current allocator uses
+`c-score` to order students while forming teams and only enforces team-size
+limits. Optional gender and attainment checks are evaluated after allocation
+and reported as findings; they do not influence team formation or guarantee a
+policy-compliant allocation. The attainment check requires a c-score for every
+student. Infeasible runs are saved for inspection but cannot be exported.
+
+Successful runs can be inspected and exported as CSV with exactly these
+columns, in order: `first_name`, `last_name`, `email`, `team`.
+
 ## Tests
 
 Run all tests with `python manage.py test`. You can also run a part of them,
