@@ -8,6 +8,7 @@ class Violation:
     message: str
     is_hard: bool
     severity: float = 1
+    is_unavoidable: bool = False
 
 
 class Policy:
