@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-#for the project,cohort, student details, and programing attributes
+
 
 class User(AbstractUser):
     """A user of the group allocation application."""
@@ -20,9 +20,27 @@ class User(AbstractUser):
 class Project(models.Model):
     """A project requiring students to be allocated to teams."""
 
-    name = models.CharField(max_length=150)
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="projects",
+        null=True, blank=True,
+    )
+    name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name", "id"]
+
+    @property
+    def current_cohort(self):
+        """Use the latest imported batch for the project allocation pages."""
+        return self.cohorts.order_by("-uploaded_at", "-pk").first()
+
+    @property
+    def students(self):
+        """Expose students from the current batch without mixing cohorts."""
+        cohort = self.current_cohort
+        return cohort.students.all() if cohort else Student.objects.none()
 
     def __str__(self):
         return self.name
@@ -122,3 +140,20 @@ class Student(models.Model):
             f"{self.first_name} "
             f"{self.last_name} ({self.email})"
         )
+
+
+class AllocationRun(models.Model):
+    """A saved outcome and snapshot of one allocation attempt."""
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='allocation_runs')
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20)
+    message = models.CharField(max_length=300)
+    min_team_size = models.PositiveSmallIntegerField()
+    max_team_size = models.PositiveSmallIntegerField()
+    policies = models.JSONField(default=dict)
+    teams = models.JSONField(default=list)
+    violations = models.JSONField(default=list)
+
+    class Meta:
+        ordering = ['-created_at', '-id']

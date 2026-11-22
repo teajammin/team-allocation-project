@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Create project</h1>
+  <p>Upload a UTF-8 CSV with first_name, last_name and email columns. Gender, ethnicity and c-score are optional; additional columns are retained.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include 'partials/form.html' %}
+    <button type="submit" class="btn btn-primary">Create project</button>
+    <a class="btn btn-secondary" href="{% url 'project_list' %}">Cancel</a>
+  </form>
+{% endblock %}
