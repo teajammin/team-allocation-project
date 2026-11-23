@@ -5,7 +5,9 @@ from django.contrib.auth.forms import (
     SetPasswordMixin,
     UserCreationForm,
 )
+from django.core.exceptions import ValidationError
 
+from .cohort import parse_cohort_csv
 from .models import User
 
 
@@ -81,3 +83,68 @@ class UserUpdateForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'is_superuser']
+
+
+class ProjectForm(BootstrapFormMixin, forms.Form):
+    """Create a project with an initial, validated student cohort."""
+
+    name = forms.CharField(max_length=200, label='Project name')
+    cohort_file = forms.FileField(label='Cohort CSV')
+
+    def clean_cohort_file(self):
+        uploaded_file = self.cleaned_data['cohort_file']
+        self.cleaned_data['students'] = parse_cohort_csv(uploaded_file)
+        return uploaded_file
+
+
+class CohortUploadForm(BootstrapFormMixin, forms.Form):
+    """Validate a replacement cohort before changing the project."""
+
+    cohort_file = forms.FileField(label='Cohort CSV')
+
+    def clean_cohort_file(self):
+        uploaded_file = self.cleaned_data['cohort_file']
+        self.cleaned_data['students'] = parse_cohort_csv(uploaded_file)
+        return uploaded_file
+
+
+class AllocationForm(BootstrapFormMixin, forms.Form):
+    """Configure team size and optional post-allocation policy checks."""
+
+    min_team_size = forms.IntegerField(min_value=1, max_value=100, initial=4)
+    max_team_size = forms.IntegerField(min_value=1, max_value=100, initial=5)
+    check_gender = forms.BooleanField(
+        required=False,
+        label='Report gender representation findings',
+    )
+    check_attainment = forms.BooleanField(
+        required=False,
+        label='Report prior attainment findings',
+    )
+    max_spread = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=100,
+        initial=20,
+        label='Maximum within-team c-score spread',
+    )
+
+    def __init__(self, *args, students=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.students = students
+
+    def clean(self):
+        cleaned_data = super().clean()
+        min_size = cleaned_data.get('min_team_size')
+        max_size = cleaned_data.get('max_team_size')
+        if min_size is not None and max_size is not None and min_size > max_size:
+            self.add_error('max_team_size', 'Maximum team size must be at least the minimum.')
+
+        if cleaned_data.get('check_attainment'):
+            if cleaned_data.get('max_spread') is None:
+                self.add_error('max_spread', 'Enter a maximum spread for the attainment check.')
+            if self.students is not None and any(student.c_score is None for student in self.students):
+                raise ValidationError(
+                    'The attainment check requires a c-score for every student.'
+                )
+        return cleaned_data
