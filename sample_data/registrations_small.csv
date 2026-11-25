@@ -1,0 +1,13 @@
+first_name,last_name,email,gender,ethnicity,schedule,ambition
+Rahul,Khan,rahul.khan@students.example,2: Man,"1: Asian, or Asian British",1: Yes,1: Exceed workload
+Rami,Fahmy,rami.fahmy@students.example,2: Man,5 : Other ethnic group (e.g. Arab),1: Yes,2: Meet workload
+Victoria,Thomas,victoria.thomas@students.example,1: Woman,4: White,1: Yes,2: Meet workload
+Hadi,Abbas,hadi.abbas@students.example,2: Man,5 : Other ethnic group (e.g. Arab),1: Yes,2: Meet workload
+Alice,Walker,alice.walker@students.example,1: Woman,4: White,1: Yes,2: Meet workload
+Mahmoud,Rahim,mahmoud.rahim@students.example,2: Man,5 : Other ethnic group (e.g. Arab),1: Yes,2: Meet workload
+Zoya,Banerjee,zoya.banerjee@students.example,1: Woman,"1: Asian, or Asian British",1: Yes,2: Meet workload
+Rina,Islam,rina.islam@students.example,1: Woman,"1: Asian, or Asian British",1: Yes,1: Exceed workload
+Zara,Chen,zara.chen@students.example,1: Woman,"1: Asian, or Asian British",1: Yes,2: Meet workload
+Oscar,Cooper,oscar.cooper@students.example,2: Man,4: White,1: Yes,2: Meet workload
+Soojin,Ahmed,soojin.ahmed@students.example,1: Woman,"1: Asian, or Asian British",1: Yes,2: Meet workload
+Luca,Green-Ahmed,luca.green.ahmed@students.example,2: Man,"3 : Mixed, or multiple ethic groups",1: Yes,1: Exceed workload
