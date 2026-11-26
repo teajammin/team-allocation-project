@@ -1,4 +1,3 @@
-from types import SimpleNamespace
 from django.test import SimpleTestCase
 from hypothesis import given, strategies as st
 from allocations.allocator.team import Team
@@ -8,6 +7,7 @@ from allocations.policies.ethnicity import EthnicityPolicy
 from allocations.policies.gender import GenderPolicy
 from allocations.policies.same_attribute import SameAttributePolicy
 from allocations.policies.team_size import TeamSizePolicy
+from allocations.tests.allocator.helpers import make_students
 
 GENDERS = st.sampled_from([None, "1", "2", "3"])
 ETHNICITIES = st.sampled_from([None, "1", "2", "3", "4", "5"])
@@ -15,17 +15,16 @@ MARKS = st.one_of(st.none(), st.integers(0, 100))
 COURSES = st.sampled_from([None, "Computing", "Maths"])
 
 
-def make_student(gender, ethnicity, mark, course):
-    """student with fields that policies read"""
-    return SimpleNamespace(
-        gender=gender,
-        ethnicity=ethnicity,
-        c_score=mark,
-        extra={"course": course},
-    )
+def make_policy_student(gender, ethnicity, mark, course):
+    """take the stand in student and add field policies read"""
+    student = make_students([mark])[0]
+    student.gender = gender
+    student.ethnicity = ethnicity
+    student.extra = {'course': course}
+    return student
 
 
-STUDENTS = st.builds(make_student, GENDERS, ETHNICITIES, MARKS, COURSES)
+STUDENTS = st.builds(make_policy_student, GENDERS, ETHNICITIES, MARKS, COURSES)
 GROUPS = st.lists(st.lists(STUDENTS, max_size=8), max_size=10)
 
 
@@ -88,7 +87,7 @@ class PolicyGeneratedTest(SimpleTestCase):
     def test_undisclosed_student_cause(self, sizes):
         groups = []
         for size in sizes:
-            groups.append([make_student(None, None, None, None)] * size)
+            groups.append([make_policy_student(None, None, None, None)] * size)
         teams = make_team(groups)
         for policy in soft_policies():
             self.assertEqual(policy.evaluate(teams), [])
