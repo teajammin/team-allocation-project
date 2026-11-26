@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from allocations.allocator.engine import allocate
 from allocations.allocator.result import Status
 from allocations.forms import AllocationForm, CohortUploadForm, ProjectForm
-from allocations.models import AllocationRun, Cohort, Project, Student
+from allocations.models import AllocationRun, Project, Student
 from allocations.policies.attainment import AttainmentPolicy
 from allocations.policies.base import get_violations
 from allocations.policies.gender import GenderPolicy
@@ -32,7 +32,7 @@ def _get_project(user, project_id):
 @login_required
 def project_list(request):
     """List projects available to the signed-in staff user."""
-    projects = _accessible_projects(request.user).prefetch_related('allocation_runs')
+    projects = _accessible_projects(request.user).prefetch_related('students')
     return render(request, 'project_list.html', {'projects': projects})
 
 
@@ -47,9 +47,8 @@ def project_create(request):
                     owner=request.user,
                     name=form.cleaned_data['name'],
                 )
-                cohort = Cohort.objects.create(project=project, name="Initial upload")
                 Student.objects.bulk_create([
-                    Student(cohort=cohort, **student_data)
+                    Student(project=project, **student_data)
                     for student_data in form.cleaned_data['students']
                 ])
             messages.success(request, 'Project created and cohort imported.')
@@ -75,7 +74,7 @@ def project_detail(request, project_id):
 
 @login_required
 def cohort_upload(request, project_id):
-    """Import a new current cohort while preserving previous batches."""
+    """Replace a project's cohort only after the uploaded CSV validates."""
     project = _get_project(request.user, project_id)
     if request.method != 'POST':
         return redirect('project_detail', project_id=project.id)
@@ -91,16 +90,9 @@ def cohort_upload(request, project_id):
         })
 
     with transaction.atomic():
-        # Serialize imports so concurrent uploads receive distinct batch names.
-        Project.objects.select_for_update().get(pk=project.pk)
-        number = project.cohorts.count() + 1
-        name = f"Upload {number}"
-        while project.cohorts.filter(name=name).exists():
-            number += 1
-            name = f"Upload {number}"
-        cohort = Cohort.objects.create(project=project, name=name)
+        project.students.all().delete()
         Student.objects.bulk_create([
-            Student(cohort=cohort, **student_data)
+            Student(project=project, **student_data)
             for student_data in form.cleaned_data['students']
         ])
     messages.success(request, 'The project cohort has been replaced.')
@@ -191,6 +183,14 @@ def allocation_run_detail(request, project_id, run_id):
     })
 
 
+def _safe_csv_cell(value):
+    """Keep spreadsheet formula prefixes as text, including after whitespace."""
+    text = str(value)
+    if text.lstrip().startswith(('=', '+', '-', '@')) or text.startswith(('\t', '\r', '\n')):
+        return "'" + text
+    return text
+
+
 @login_required
 def allocation_export(request, project_id, run_id):
     """Export a successful allocation in the prescribed four-column format."""
@@ -212,7 +212,7 @@ def allocation_export(request, project_id, run_id):
     writer.writerow(['first_name', 'last_name', 'email', 'team'])
     for team in allocation_run.teams:
         for student in team['students']:
-            writer.writerow([
+            writer.writerow(_safe_csv_cell(value) for value in [
                 student['first_name'],
                 student['last_name'],
                 student['email'],

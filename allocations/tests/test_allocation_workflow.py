@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from allocations.models import AllocationRun, Cohort, Project, Student
+from allocations.models import AllocationRun, Project, Student
 from allocations.tests.helpers import create_user
 
 
@@ -31,7 +31,6 @@ class AllocationWorkflowTests(TestCase):
         self.user = create_user()
         self.client.force_login(self.user)
         self.project = Project.objects.create(owner=self.user, name='Software Engineering')
-        self.cohort = Cohort.objects.create(project=self.project, name='Initial upload')
 
     def upload(self, content):
         return SimpleUploadedFile('cohort.csv', content, content_type='text/csv')
@@ -105,7 +104,7 @@ class AllocationWorkflowTests(TestCase):
 
     def test_cohort_replacement_is_atomic_on_invalid_upload(self):
         Student.objects.create(
-            cohort=self.cohort,
+            project=self.project,
             first_name='Existing',
             last_name='Student',
             email='existing@example.org',
@@ -124,7 +123,7 @@ class AllocationWorkflowTests(TestCase):
     def test_allocation_run_displays_teams_and_exports_required_columns(self):
         for number in range(8):
             Student.objects.create(
-                cohort=self.cohort,
+                project=self.project,
                 first_name=f'Student{number}',
                 last_name='Example',
                 email=f'student{number}@example.org',
@@ -163,7 +162,7 @@ class AllocationWorkflowTests(TestCase):
     def test_infeasible_result_is_saved_but_not_exported(self):
         for number in range(7):
             Student.objects.create(
-                cohort=self.cohort,
+                project=self.project,
                 first_name=f'Student{number}',
                 last_name='Example',
                 email=f'student{number}@example.org',
@@ -187,7 +186,7 @@ class AllocationWorkflowTests(TestCase):
 
     def test_attainment_check_requires_a_score_for_every_student(self):
         Student.objects.create(
-            cohort=self.cohort,
+            project=self.project,
             first_name='Student',
             last_name='Example',
             email='student@example.org',
@@ -211,18 +210,3 @@ class AllocationWorkflowTests(TestCase):
         response = self.client.get(reverse('project_detail', args=[other_project.id]))
 
         self.assertEqual(response.status_code, 404)
-
-    def test_valid_upload_preserves_previous_cohort(self):
-        original = Student.objects.create(
-            cohort=self.cohort, first_name='Previous', last_name='Student',
-            email='previous@example.org',
-        )
-        response = self.client.post(
-            reverse('cohort_upload', args=[self.project.id]),
-            {'cohort_file': self.upload(cohort_csv())},
-        )
-        self.assertRedirects(response, reverse('project_detail', args=[self.project.id]))
-        self.assertEqual(self.project.cohorts.count(), 2)
-        self.assertTrue(self.cohort.students.filter(pk=original.pk).exists())
-        self.assertEqual(self.project.students.count(), 8)
-        self.assertFalse(self.project.students.filter(pk=original.pk).exists())

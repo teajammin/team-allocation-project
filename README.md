@@ -39,16 +39,8 @@ contain `first_name`, `last_name` and `email` columns. The optional columns
 `gender`, `ethnicity` and `c-score` are validated against the categories and
 score range in the assignment; additional columns are retained as student
 attributes. Email addresses must be unique within a cohort (case-insensitive).
-Uploads are rejected in full if any row is invalid. A valid upload creates a
-new Cohort and makes it the current batch for allocation; previous cohorts and
-allocation-run snapshots remain intact. Students belong to a Cohort, which
-belongs to a Project. The project pages use only the latest cohort.
-
-Run `python manage.py migrate` before using these pages. Migration 0003 moves
-existing project students into an initial cohort without deleting them. This
-data migration does not support reversing to the old single-cohort schema.
-Projects created through the pages have an owner; ownerless sample projects
-are visible only to superusers.
+Uploads are rejected in full if any row is invalid; replacing a cohort leaves
+existing allocation-run snapshots intact.
 
 Allocation runs use the configured minimum and maximum team sizes and call
 `allocate(students, policies)` as implemented. The current allocator uses
@@ -79,3 +71,38 @@ Open `htmlcov/index.html` in a browser to see exactly which lines and
 branches are not tested. The report leaves out code that is not ours or that
 is not worth testing, such as the virtual environment, migrations, settings
 and the tests themselves.
+
+## Two-file import service
+
+`allocations.cohort.parse_two_file_cohort(registrations_file, marks_file)`
+validates both CSV files and returns a `CohortImportResult` with:
+
+- `students`: registered student dictionaries ready for `Student(project=..., **row)`.
+- `registered_without_marks`: registered students whose score is missing (`None`).
+- `marks_only`: marks rows without a matching registration, excluded from students.
+
+Registrations require `first_name,last_name,email`; gender and ethnicity are
+optional, and additional attributes such as schedule and ambition are retained
+in `extra`. Marks require `name,email,c-score`. Emails are matched ignoring case
+and surrounding whitespace. Registration names are authoritative. Blank scores
+and header-only marks files are allowed; zero is a valid score. In the two-file
+workflow, scores come only from the marks file. Invalid files raise Django
+`ValidationError` with the file type and row details where available.
+
+`import_two_file_cohort(project, registrations_file, marks_file)` validates first,
+then replaces the project's students in a transaction and returns the same
+report. The caller must enforce project permissions. Allocation snapshots remain
+unchanged. The upload UI can render the two mismatch lists; the existing single
+CSV forms remain compatible until the two-file screen is connected.
+
+Apply migrations with `python manage.py migrate`. Migration 0003 adds model
+validation while retaining the existing Project/Student schema and nullable
+scores. Seed sample projects with `python manage.py seed_role1`.
+
+Run the relevant tests and lint checks with:
+
+```sh
+python manage.py test allocations.tests.test_cohort_import allocations.tests.test_student_models allocations.tests.test_seed_role1 allocations.tests.test_allocation_workflow
+python manage.py makemigrations --check --dry-run
+python -m flake8
+```

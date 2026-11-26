@@ -34,7 +34,7 @@
 
   <section class="mb-5">
     <h2>Replace cohort</h2>
-    <p>The new upload becomes the current cohort only if every row passes validation. Previous cohorts and saved allocation runs are preserved.</p>
+    <p>The existing cohort is replaced only if every row in the new CSV passes validation. Previously saved allocation runs remain available.</p>
     <form method="post" enctype="multipart/form-data" action="{% url 'cohort_upload' project.id %}">
       {% csrf_token %}
       {% include 'partials/form.html' with form=upload_form %}

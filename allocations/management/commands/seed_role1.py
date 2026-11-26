@@ -2,10 +2,10 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from allocations.models import Cohort, Project, Student
+from allocations.models import Project, Student
 
 
-#Seed users and synthetic data for the allocation system.
+# Seed users and synthetic data for the allocation system.
 class Command(BaseCommand):
     help = "Seed required users and sample cohort data."
 
@@ -15,14 +15,12 @@ class Command(BaseCommand):
 
         self._seed_cohort(
             "Software Engineering Group Work",
-            "Sample 2026 A",
             120,
             0
         )
 
         self._seed_cohort(
             "Data Science Group Work",
-            "Sample 2026 B",
             60,
             1000
         )
@@ -42,7 +40,7 @@ class Command(BaseCommand):
         )
 
         for username, first_name, last_name, is_staff, is_superuser in users:
-            user, _ = user_model.objects.get_or_create(
+            user, created = user_model.objects.get_or_create(
                 username=username,
                 defaults={
                     "first_name": first_name,
@@ -53,33 +51,19 @@ class Command(BaseCommand):
                 }
             )
 
-            user.is_staff = is_staff
-            user.is_superuser = is_superuser
-
-            user.set_password("Allocation123")
-
-            user.save(
-                update_fields=[
-                    "is_staff",
-                    "is_superuser",
-                    "password"
-                ]
-            )
+            if created:
+                user.set_password("Allocation123")
+                user.save(update_fields=["password"])
 
     def _seed_cohort(
         self,
         project_name,
-        cohort_name,
         count,
         offset
     ):
         project, _ = Project.objects.get_or_create(
-            name=project_name
-        )
-
-        cohort, _ = Cohort.objects.get_or_create(
-            project=project,
-            name=cohort_name
+            name=project_name,
+            owner=get_user_model().objects.get(username="janedoe"),
         )
 
         for index in range(1, count + 1):
@@ -94,7 +78,7 @@ class Command(BaseCommand):
             )[number % 6]
 
             Student.objects.get_or_create(
-                cohort=cohort,
+                project=project,
                 email=f"student{number:04d}@example.com",
                 defaults={
                     "first_name": f"Student{number:04d}",

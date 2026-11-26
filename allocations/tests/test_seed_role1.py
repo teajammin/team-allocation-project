@@ -2,8 +2,8 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
 
-from allocations.models import Cohort, Project, Student
-#for the seed command.
+from allocations.models import Project, Student
+
 
 class Role1SeedCommandTests(TestCase):
 
@@ -37,7 +37,6 @@ class Role1SeedCommandTests(TestCase):
         )
 
         self.assertEqual(Project.objects.count(), 2)
-        self.assertEqual(Cohort.objects.count(), 2)
         self.assertEqual(Student.objects.count(), 180)
 
     def test_seed_is_idempotent(self):
@@ -58,11 +57,6 @@ class Role1SeedCommandTests(TestCase):
 
         self.assertEqual(
             Project.objects.count(),
-            2
-        )
-
-        self.assertEqual(
-            Cohort.objects.count(),
             2
         )
 
@@ -89,3 +83,24 @@ class Role1SeedCommandTests(TestCase):
                 ethnicity__isnull=True
             ).exists()
         )
+
+    def test_existing_passwords_and_permissions_are_preserved(self):
+        user_model = get_user_model()
+        existing = []
+        for username, staff, superuser in [('janedoe', False, False), ('johndoe', True, True)]:
+            user = user_model.objects.create_user(
+                username=username, password='Existing-secret-123',
+                email=f'{username}@custom.example', first_name='Custom', last_name='Name',
+                is_staff=staff, is_superuser=superuser,
+            )
+            existing.append((user, user.password, staff, superuser))
+
+        call_command('seed_role1', verbosity=0)
+
+        for user, password_hash, staff, superuser in existing:
+            user.refresh_from_db()
+            self.assertEqual(user.password, password_hash)
+            self.assertEqual(user.is_staff, staff)
+            self.assertEqual(user.is_superuser, superuser)
+            self.assertEqual(user.email, f'{user.username}@custom.example')
+            self.assertEqual(user.first_name, 'Custom')
