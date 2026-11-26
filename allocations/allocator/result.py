@@ -16,9 +16,13 @@ class Status(Enum):
 
 
 class AllocationResult:
-    """What allocate() hands back: the outcome, the teams and a message."""
+    """What allocate() hands back: the outcome, the teams, a message and any unmet conditions.
 
-    def __init__(self, status, teams, message):
+    Teams are only present on SUCCESS. Violations explain what the allocation does not satisfy:
+    soft conditions on SUCCESS, or the hard conditions still broken on TIMED_OUT.
+    """
+
+    def __init__(self, status, teams, message, violations=()):
         if status == Status.SUCCESS and teams is None:
             raise ValueError("A successful result must include teams.")
         if status != Status.SUCCESS and teams is not None:
@@ -26,3 +30,4 @@ class AllocationResult:
         self.status = status
         self.teams = teams
         self.message = message
+        self.violations = tuple(violations)
