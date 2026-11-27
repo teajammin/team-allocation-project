@@ -1,0 +1,64 @@
+{% for error in import_form.non_field_errors %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endfor %}
+{% for error in import_form.errors.cohort_file %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endfor %}
+
+<div class="mb-3">
+  <label for="id_registrations_file" class="form-label">Student registrations CSV</label>
+  <input
+    type="file"
+    class="form-control"
+    id="id_registrations_file"
+    name="registrations_file"
+    accept=".csv,text/csv"
+    required>
+  <div class="form-text">
+    Required columns: first_name, last_name, email. Optional student attributes such as gender and ethnicity may also be included. Do not include c-score here.
+  </div>
+  {% for error in import_form.errors.registrations_file %}
+    <div class="text-danger">{{ error }}</div>
+  {% endfor %}
+</div>
+
+<div class="mb-3">
+  <label for="id_marks_file" class="form-label">Department marks CSV</label>
+  <input
+    type="file"
+    class="form-control"
+    id="id_marks_file"
+    name="marks_file"
+    accept=".csv,text/csv"
+    required>
+  <div class="form-text">
+    Required columns: name, email, c-score. C-score must be an integer from 0 to 100. Students are matched using email.
+  </div>
+  {% for error in import_form.errors.marks_file %}
+    <div class="text-danger">{{ error }}</div>
+  {% endfor %}
+</div>
+
+{% if import_form.missing_marks %}
+  <div class="alert alert-danger" role="alert">
+    <h3 class="h5">Registered students missing from the marks file</h3>
+    <p>Correct the marks file and upload both files again. The cohort was not imported.</p>
+    <ul class="mb-0">
+      {% for student in import_form.missing_marks %}
+        <li>{{ student.first_name }} {{ student.last_name }} — {{ student.email }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+{% if import_form.unmatched_marks %}
+  <div class="alert alert-warning" role="status">
+    <h3 class="h5">Marks not matched to registrations</h3>
+    <p>These students are not registered and will not be imported or allocated.</p>
+    <ul class="mb-0">
+      {% for student in import_form.unmatched_marks %}
+        <li>{{ student.name }} — {{ student.email }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
