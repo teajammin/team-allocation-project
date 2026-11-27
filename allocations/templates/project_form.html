@@ -2,10 +2,17 @@
 
 {% block content %}
   <h1>Create project</h1>
-  <p>Upload a UTF-8 CSV with first_name, last_name and email columns. Gender, ethnicity and c-score are optional; additional columns are retained.</p>
+  <p>Create a project and import its cohort using the student registrations and department marks files.</p>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {% include 'partials/form.html' %}
+    <div class="mb-3">
+      {{ form.name.label_tag }}
+      {{ form.name }}
+      {% for error in form.name.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% include 'partials/registration_marks_fields.html' with import_form=form %}
     <button type="submit" class="btn btn-primary">Create project</button>
     <a class="btn btn-secondary" href="{% url 'project_list' %}">Cancel</a>
   </form>
